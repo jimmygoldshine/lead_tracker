@@ -1,1 +1,8 @@
-No emails are being pulled through!
+<% if @all_emails.empty? %>
+  No emails are being pulled through!
+<% else %>
+<ul>
+  <% @all_emails.each do |email| %>
+    <li> <%= email %>
+  <% end %>
+<% end %>
