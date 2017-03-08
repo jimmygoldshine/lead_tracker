@@ -34,10 +34,12 @@ class Email < ApplicationRecord
   end
 
   def get(query, max_results)
-    initialize_API
+    service = Google::Apis::GmailV1::GmailService.new
+    service.client_options.application_name = APPLICATION_NAME
+    service.authorization = authorize
   # Show the user's message list
-    result = service.list_user_messages('me', options = {q: query, max_results: max_results})
     id_list = []
+    result = service.list_user_messages('me', options = {q: query, max_results: max_results})
     result.messages.each do |message|
       id_list << message.id
     end
