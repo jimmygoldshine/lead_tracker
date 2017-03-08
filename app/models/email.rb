@@ -1,10 +1,9 @@
 require 'google/apis/gmail_v1'
 require 'googleauth'
 require 'googleauth/stores/file_token_store'
-
 require 'fileutils'
 
-class Gmail
+class Email < ApplicationRecord
 
   OOB_URI = 'urn:ietf:wg:oauth:2.0:oob'
   APPLICATION_NAME = 'Gmail API Ruby Quickstart'
@@ -13,16 +12,8 @@ class Gmail
                                "gmail-ruby-quickstart.yaml")
   SCOPE = Google::Apis::GmailV1::AUTH_GMAIL_READONLY
 
-  ##
-  # Ensure valid credentials, either by restoring from the saved credentials
-  # files or intitiating an OAuth2 authorization. If authorization is required,
-  # the user's default browser will be launched to approve the request.
-  #
-  # @return [Google::Auth::UserRefreshCredentials] OAuth2 credentials
-
   def authorize
     FileUtils.mkdir_p(File.dirname(CREDENTIALS_PATH))
-
     client_id = Google::Auth::ClientId.from_file(CLIENT_SECRETS_PATH)
     token_store = Google::Auth::Stores::FileTokenStore.new(file: CREDENTIALS_PATH)
     authorizer = Google::Auth::UserAuthorizer.new(
@@ -42,18 +33,11 @@ class Gmail
     credentials
   end
 
-
-  def get_emails(query, max_results)
-    # Initialize the API
-    service = Google::Apis::GmailV1::GmailService.new
-    service.client_options.application_name = APPLICATION_NAME
-    service.authorization = authorize
-
+  def get(query, max_results)
+    initialize_API
   # Show the user's message list
     result = service.list_user_messages('me', options = {q: query, max_results: max_results})
-
     id_list = []
-
     result.messages.each do |message|
       id_list << message.id
     end
@@ -66,8 +50,13 @@ class Gmail
       subject = service.get_user_message('me', id, options = {format: 'metadata', metadata_headers: 'Subject'}).payload.headers[0].value
       email_list[date] = {from: from, to: to, subject: subject}
     end
-
     email_list
-
   end
+
+  def initialize_API
+    service = Google::Apis::GmailV1::GmailService.new
+    service.client_options.application_name = APPLICATION_NAME
+    service.authorization = authorize
+  end
+
 end
